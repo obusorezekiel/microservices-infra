@@ -1,0 +1,9 @@
+# site.yml
+---
+- hosts: localhost
+  gather_facts: true
+  roles:
+    - argocd-installation
+    - argocd-apps
+    - logging-stack
+    - monitoring-stack

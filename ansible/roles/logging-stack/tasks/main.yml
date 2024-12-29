@@ -1,0 +1,12 @@
+---
+- name: Add Elastic Helm repository
+  kubernetes.core.helm_repository:
+    name: elastic
+    repo_url: https://helm.elastic.co
+
+- name: Install EFK stack
+  kubernetes.core.helm:
+    name: efk
+    chart_ref: elastic/eck-operator
+    release_namespace: logging
+    create_namespace: true

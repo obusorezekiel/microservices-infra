@@ -1,0 +1,23 @@
+---
+- name: Create microservices application manifest
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: argoproj.io/v1alpha1
+      kind: Application
+      metadata:
+        name: microservices-app
+        namespace: argocd
+      spec:
+        project: default
+        source:
+          repoURL: "{{ app_repo_url }}"
+          targetRevision: HEAD
+          path: kubernetes
+        destination:
+          server: https://kubernetes.default.svc
+          namespace: default
+        syncPolicy:
+          automated:
+            prune: true
+            selfHeal: true

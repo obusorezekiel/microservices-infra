@@ -1,19 +1,23 @@
 ---
-- name: Add ArgoCD Helm repository
-  kubernetes.core.helm_repository:
-    name: argo
-    repo_url: https://argoproj.github.io/argo-helm
+- name: Ensure kubectl is installed
+  command: which kubectl
+  register: kubectl_check
+  ignore_errors: true
 
-- name: Install ArgoCD
-  kubernetes.core.helm:
-    name: argocd
-    chart_ref: argo/argo-cd
-    release_namespace: argocd
-    create_namespace: true
-    values:
-      server:
-        extraArgs:
-          - --insecure
-      configs:
-        secret:
-          argocdServerAdminPassword: "{{ lookup('password', '/dev/null length=16 chars=ascii_letters,digits') | password_hash('bcrypt') }}"
+- name: Install kubectl if not present
+  command: curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" &&
+           chmod +x kubectl &&
+           mv kubectl /usr/local/bin/kubectl
+  when: kubectl_check.rc != 0
+
+- name: Create namespace for ArgoCD
+  command: kubectl create namespace argocd
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+  ignore_errors: true
+
+- name: Apply ArgoCD manifests
+  command: >
+    kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
